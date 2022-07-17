@@ -1,5 +1,6 @@
 import { DI } from './core/di'
 import { Broker } from './core/messenger'
+import { MetadataManager } from './core/metadata'
 import { Config } from './types'
 
 export class MeshNode {
@@ -10,17 +11,11 @@ export class MeshNode {
     DI.instance().setType(config.di)
     this.broker = new Broker(config.rabbit)
     this.broker.connect().then(() => {
-      this.broker.handle((error, { key, args }) => new Promise((resolve, reject) => {
-        if (error) {
-          return reject(error)
-        }
-        // this.emit(key, args, (error: unknown | null, result) => {
-        //   if (error) {
-        //     return reject(error)
-        //   }
-        //   resolve(result)
-        // })
-      }))
+      this.broker.listen(({ key, args }) => {
+        MetadataManager.trigger(key, args)
+      })
+      this.broker.handle((error: Error | null, { key, args }) =>
+        MetadataManager.instance().trigger(key, args))
     })
   }
 
