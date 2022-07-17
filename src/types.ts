@@ -9,11 +9,11 @@ export interface BrokerConfig {
   port?: string | number
   user?: string
   password?: string
-  appName: string
   exhangeType?: 'fanout' | 'direct' | 'topic' | 'headers' | 'match'
 }
 
 export interface Config {
+  name: string
   rabbit: BrokerConfig
   di: 'typedi' | 'tsed'
 }

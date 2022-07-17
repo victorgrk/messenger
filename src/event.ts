@@ -9,7 +9,7 @@ export class MeshNode {
     config: Config
   ) {
     DI.instance().setType(config.di)
-    this.broker = new Broker(config.rabbit)
+    this.broker = new Broker(config.rabbit, config.name)
     this.broker.connect().then(() => {
       this.broker.listen(({ key, args }) => {
         MetadataManager.trigger(key, args)

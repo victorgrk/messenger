@@ -8,9 +8,9 @@ export class Broker {
   private syncExhange: string
   private exhange: string
 
-  constructor(private opts: BrokerConfig) {
-    this.exhange = opts.appName
-    this.syncExhange = opts.appName + '-sync'
+  constructor(private opts: BrokerConfig, name: string) {
+    this.exhange = name
+    this.syncExhange = name + '-sync'
   }
 
   async connect() {
