@@ -15,11 +15,12 @@
   "scripts": {
     "clean": "rimraf lib",
     "lint": "eslint \"src/**/*.ts\"",
-    "build": "concurrently \"npm:build:barrels\" \"npm:build:esm\" \"npm:build:cjs\"",
+    "build": "concurrently \"npm:build:esm\" \"npm:build:cjs\"",
     "build:barrels": "barrelsby -d ./src",
     "build:cjs": "tsc --build tsconfig.compile.cjs.json",
     "build:esm": "tsc --build tsconfig.compile.esm.json",
-    "prepack": "npm run clean && npm run build"
+    "prepack": "npm run clean && npm run build",
+    "prepare": "husky install"
   },
   "keywords": [
     "AMQP",
@@ -30,10 +31,12 @@
   "author": "Victor Gorecki",
   "license": "ISC",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.6",
     "barrelsby": "^2.3.4",
     "concurrently": "^7.2.2",
     "eslint": "^8.20.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "husky": "^8.0.0"
   }
 }
