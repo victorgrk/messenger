@@ -1,0 +1,39 @@
+{
+  "name": "amqp-messenger",
+  "version": "1.0.0",
+  "description": "Amqp lib to send and receive messages from different applications",
+  "source": "./src/index.ts",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "typings": "./lib/types/index.d.ts",
+  "exports": {
+    "types": "./lib/types/index.d.ts",
+    "import": "./lib/esm/index.js",
+    "require": "./lib/cjs/index.js",
+    "default": "./lib/esm/index.js"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "lint": "eslint \"src/**/*.ts\"",
+    "build": "concurrently \"npm:build:barrels\" \"npm:build:esm\" \"npm:build:cjs\"",
+    "build:barrels": "barrelsby -d ./src",
+    "build:cjs": "tsc --build tsconfig.compile.cjs.json",
+    "build:esm": "tsc --build tsconfig.compile.esm.json",
+    "prepack": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "AMQP",
+    "typescript",
+    "tsed",
+    "typedi"
+  ],
+  "author": "Victor Gorecki",
+  "license": "ISC",
+  "devDependencies": {
+    "barrelsby": "^2.3.4",
+    "concurrently": "^7.2.2",
+    "eslint": "^8.20.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.7.4"
+  }
+}
