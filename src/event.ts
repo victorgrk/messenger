@@ -1,3 +1,4 @@
+import { DI } from './core/di'
 import { Broker } from './core/messenger'
 import { Config } from './types'
 
@@ -6,6 +7,7 @@ export class MeshNode {
   constructor(
     config: Config
   ) {
+    DI.instance().setType(config.di)
     this.broker = new Broker(config.rabbit)
     this.broker.connect().then(() => {
       this.broker.handle((error, { key, args }) => new Promise((resolve, reject) => {
