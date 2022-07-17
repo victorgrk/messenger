@@ -32,6 +32,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
+    "@types/glob-parent": "^5.1.1",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "barrelsby": "^2.3.4",
     "concurrently": "^7.2.2",
@@ -42,6 +43,7 @@
   },
   "dependencies": {
     "amqplib": "^0.10.0",
+    "glob-parent": "^6.0.2",
     "tslib": "^2.4.0"
   },
   "optionalDependencies": {

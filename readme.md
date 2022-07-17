@@ -1,5 +1,7 @@
 # AMQP messenger
 
+# THIS PACKAGE IS CURRENTLY UNDER DEVELOPMENT, IT HAS NOT BEEN PUBLISHED TO NPM REGISTRY
+
 > Send message and response to event with ts decorators
 
 ## Before start
