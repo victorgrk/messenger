@@ -1,3 +1,4 @@
+export declare type Constructable<T> = new (...args: any[]) => T
 export type Callback<I = any, O = any> = (
   error: unknown | null,
   result: I
@@ -15,4 +16,9 @@ export interface BrokerConfig {
 export interface Config {
   rabbit: BrokerConfig
   di: 'typedi' | 'tsed'
+}
+
+export interface EventMetadata {
+  target: Constructable<any>
+  listener: Function
 }
