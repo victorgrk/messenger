@@ -47,7 +47,7 @@ export class Server implements AfterInit {
   private injector: InjectorService
 
   $afterInit() {
-    Messenger.getInstance().init({
+    Messenger.init({
       name: 'tsed-example',
       rabbit: {
         host: 'localhost',

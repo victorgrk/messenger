@@ -1,10 +1,10 @@
 import 'reflect-metadata'
 import Container from 'typedi'
-import { importer, MeshNode } from '../../..'
+import { importer, Messenger } from '../../..'
 import { DirectoryInformation } from './services/directory'
 
 importer(`${__dirname}/services/*.ts`).then(() => {
-  MeshNode.getInstance().init({
+  Messenger.init({
     name: 'typedi-example',
     rabbit: {
       host: 'localhost',

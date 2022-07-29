@@ -40,20 +40,20 @@ import { importer } from "amqp-messenger";
 importer(`${__dirname}/events/**.*.ts`); // the path must group all files where you have @Amqp decorator
 ```
 
-Now, you can start the amqp lib by instancing a NodeMesh object
-
-I recommand using it as a service :
+Now, you can start the amqp lib by initializing the Messenger singleton
 
 ### TypeDI
 
+I recommand using it as a service :
+
 ```typescript
 import { Service } from "typedi";
-import { MeshNode } from "amqp-messenger";
+import { Messenger } from "amqp-messenger";
 
 @Service()
-export class Mesh extends MeshNode {
+export class Mesh {
   constructor() {
-    super({
+    Messenger.init({
       name: "my-node-name",
       rabbit: {
         host: process.env.RABBITMQ_HOST,
@@ -69,14 +69,20 @@ export class Mesh extends MeshNode {
 
 ### TSED.io
 
-```typescript
-import { Service } from "@tsed/di";
-import { MeshNode } from "amqp-messenger";
+For tsed, you can init your Messenger in your main configuration
 
-@Service()
-export class Mesh extends MeshNode {
-  constructor() {
-    super({
+```typescript
+import { AfterInit } from "@tsed/common";
+import { Configuration, Inject, InjectorService } from "@tsed/di";
+import { Messenger } from "amqp-messenger";
+
+@Module()
+export class Server implements AfterInit {
+  @Inject()
+  private injector: InjectorService;
+
+  $afterInit() {
+    Messenger.init({
       name: "my-node-name",
       rabbit: {
         host: process.env.RABBITMQ_HOST,
@@ -84,7 +90,7 @@ export class Mesh extends MeshNode {
         user: process.env.RABBITMQ_USER,
         password: process.env.RABBITMQ_PASSWORD,
       },
-      di: "tsed",
+      di: this.injector,
     });
   }
 }
@@ -97,7 +103,7 @@ export class Mesh extends MeshNode {
 | Name   | Default                | Description                                                                        |
 | ------ | ---------------------- | ---------------------------------------------------------------------------------- |
 | rabbit | see below the defaults | The rabbitmq credentials used to connect to the server                             |
-| di     | undefined              | The di service usued in this package (can be typedi or tsed).                      |
+| di     | undefined              | The di service usued in this package.                                              |
 | name   | undefined              | The service name of your application, usued to receive message from other services |
 
 > RabbitMQ configuration object
@@ -114,15 +120,12 @@ export class Mesh extends MeshNode {
 > To emit to rabbitmq
 
 ```typescript
-// first, import your mesh service
-import { Mesh } from "../path/to/services/mesh";
+import { Messenger } from "amqp-messenger";
 
 @Service()
 export class MyService {
-  constructor(private mesh: Mesh) {}
-
   async getMemberInformation(memberId: string) {
-    const member = await this.mesh.invoke<{ user: string }>(
+    const member = await Messenger.invoke<{ user: string }>(
       "payment.member-informations",
       {
         memberId,
@@ -133,7 +136,7 @@ export class MyService {
 
   // If you just send data, without receiving anything, you can call the publish method. It's much smaller in compute requirements
   sendUserUpdate(user: unknown) {
-    this.mesh.publish("users.update-user", user);
+    Messenger.publish("users.update-user", user);
   }
 }
 ```
