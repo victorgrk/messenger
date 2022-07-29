@@ -19,7 +19,7 @@ export class Broker {
       }:${this.opts.port || 5672}`
     )
     this.channel = await this.rabbitMQ.createChannel()
-    this.channel.prefetch(10)
+    await this.channel.prefetch(10)
     await this.startAsyncQueue()
     await this.startSyncQueue()
   }
@@ -49,7 +49,7 @@ export class Broker {
     await this.channel.bindQueue(
       this.syncExhange,
       this.exhange,
-      `sync.${this.syncExhange}.*`
+      `sync.${this.exhange}.*`
     )
   }
 
@@ -91,6 +91,7 @@ export class Broker {
       const key = msg.fields.routingKey.replace(`sync.${this.exhange}.`, '')
       try {
         const data = await cb(null, { key, args })
+        console.log(data)
         this.channel.sendToQueue(
           msg.properties.replyTo,
           Buffer.from(JSON.stringify({ data: { error: null, data } })),
@@ -112,6 +113,7 @@ export class Broker {
 
   async invoke<T>(key: string, data: unknown) {
     if (!this.channel) {
+      console.log('Connecting')
       await this.connect()
     }
     let replied = false
@@ -121,6 +123,7 @@ export class Broker {
       autoDelete: true,
       durable: false,
     })
+    console.log(`Created tmp queue: ${tmpQueue.queue}`)
     return new Promise<T>((resolve, reject) => {
       this.channel.consume(tmpQueue.queue, (msg) => {
         if (!msg) {
@@ -132,18 +135,13 @@ export class Broker {
             error: unknown | null
             data: T
           }
-          replied = true
           if (response.error) {
             return reject(response.error)
           }
           resolve(response.data)
-          setTimeout(() => {
-            if (!replied) {
-              reject('timeout')
-            }
-          }, 10000)
         }
       })
+      console.log(`publishing to ${key.split('.')[0]} with key "sync.${key}"`)
       this.channel.publish(
         key.split('.')[0],
         `sync.${key}`,

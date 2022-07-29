@@ -1,0 +1,62 @@
+{
+  "name": "example-tsed",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "npm run barrels && tsc --project tsconfig.compile.json",
+    "barrels": "barrelsby --config .barrelsby.json",
+    "start": "npm run barrels && tsnd --inspect --ignore-watch node_modules --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
+    "start:prod": "cross-env NODE_ENV=production node dist/index.js"
+  },
+  "dependencies": {
+    "@tsed/ajv": "^6.117.1",
+    "@tsed/common": "^6.117.1",
+    "@tsed/core": "^6.117.1",
+    "@tsed/di": "^6.117.1",
+    "@tsed/engines": "^6.117.1",
+    "@tsed/exceptions": "^6.117.1",
+    "@tsed/json-mapper": "^6.117.1",
+    "@tsed/logger": "^6.2.0",
+    "@tsed/logger-file": "^6.2.0",
+    "@tsed/platform-cache": "^6.117.1",
+    "@tsed/platform-exceptions": "^6.117.1",
+    "@tsed/platform-express": "^6.117.1",
+    "@tsed/platform-log-middleware": "^6.117.1",
+    "@tsed/platform-middlewares": "^6.117.1",
+    "@tsed/platform-params": "^6.117.1",
+    "@tsed/platform-response-filter": "^6.117.1",
+    "@tsed/platform-views": "^6.117.1",
+    "@tsed/schema": "^6.117.1",
+    "ajv": "^8.11.0",
+    "barrelsby": "^2.3.4",
+    "body-parser": "^1.20.0",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.1",
+    "dotenv-expand": "^8.0.3",
+    "dotenv-flow": "^3.2.0",
+    "express": "^4.18.1",
+    "method-override": "^3.0.0"
+  },
+  "tsed": {
+    "packageManager": "npm",
+    "convention": "default",
+    "architecture": "default"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.2",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/method-override": "^0.0.32",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^18.0.6",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.0.0",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  }
+}
