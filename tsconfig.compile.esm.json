@@ -8,5 +8,5 @@
     "declaration": true,
     "declarationDir": "./lib/types"
   },
-  "exclude": ["node_modules", "lib"]
+  "exclude": ["node_modules", "lib", "examples"]
 }
