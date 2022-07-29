@@ -1,5 +1,5 @@
+import { Messenger } from '../event'
 import { Constructable, EventMetadata } from '../types'
-import { DI } from './di'
 
 export class MetadataManager {
   private metadata = new Map<string, EventMetadata[]>()
@@ -36,19 +36,13 @@ export class MetadataManager {
     if (!eventMetadata) {
       return
     }
-    const instances = await Promise.allSettled(eventMetadata.map(
-      async ({ target, listener }) => ({
-        instance: await DI.instance().get(target),
-        listener
-      })
-    )).then((results) => results.filter((result) => result.status === 'fulfilled')
-      .map((result) => (<PromiseFulfilledResult<{
-        instance: unknown
-        listener: Function
-      }>>result).value))
+    const instances = eventMetadata.map(({ target, listener }) => ({
+      instance: Messenger.getInstance().config.di.get(target),
+      listener
+    }))
     const events = instances
       .filter((meta) => !!meta.instance)
-      .map(({ instance, listener }) => listener.bind(instance, ...args).call())
+      .map(async ({ instance, listener }) => await listener.bind(instance, ...args).call())
     return Promise.any(events)
   }
 }

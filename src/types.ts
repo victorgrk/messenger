@@ -15,7 +15,9 @@ export interface BrokerConfig {
 export interface Config {
   name: string
   rabbit: BrokerConfig
-  di: 'typedi' | 'tsed'
+  di: {
+    get: (target: any) => any
+  }
 }
 
 export interface EventMetadata {

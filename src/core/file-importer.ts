@@ -5,7 +5,7 @@ import { resolve } from 'path'
 export class FileImporter {
   static async import(path: string) {
     const current = resolve(globParent(path))
-    const files = await this.treeResolver(current)
+    const files = await FileImporter.treeResolver(current)
     if (!files) {
       throw 'No files found'
     }
@@ -23,7 +23,7 @@ export class FileImporter {
       const filePath = resolve(path, file)
       const isDirectory = statSync(filePath).isDirectory()
       if (isDirectory) {
-        const child = await this.treeResolver(filePath)
+        const child = await FileImporter.treeResolver(filePath)
         result.push(...(child || []))
       } else {
         result.push(filePath)
