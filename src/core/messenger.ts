@@ -5,13 +5,9 @@ import { BrokerConfig, Callback } from '../types'
 export class Broker {
   private rabbitMQ!: Connection
   private channel!: Channel
-  private syncExhange: string
-  private exhange: string
+  private closing = false
 
-  constructor(private opts: BrokerConfig, name: string) {
-    this.exhange = name
-    this.syncExhange = name + '-sync'
-  }
+  constructor(private opts: BrokerConfig, private exchange: string) { }
 
   async connect() {
     this.rabbitMQ = await connect(
@@ -20,119 +16,92 @@ export class Broker {
     )
     this.channel = await this.rabbitMQ.createChannel()
     await this.channel.prefetch(10)
-    await this.startAsyncQueue()
-    await this.startSyncQueue()
+    await this.assertExchange(this.exchange)
+    this.closing = false
   }
-
-  private async startAsyncQueue() {
-    await this.channel.assertQueue(this.exhange, {
-      durable: false,
-    })
-    await this.channel.assertExchange(
-      this.exhange,
-      this.opts.exhangeType || 'fanout',
-      {
-        durable: true,
-      }
-    )
-    await this.channel.bindQueue(
-      this.exhange,
-      this.exhange,
-      `${this.exhange}.*`
-    )
-  }
-
-  private async startSyncQueue() {
-    await this.channel.assertQueue(this.syncExhange, {
-      durable: false,
-    })
-    await this.channel.bindQueue(
-      this.syncExhange,
-      this.exhange,
-      `sync.${this.exhange}.*`
-    )
-  }
-
-  async listen<T>(cb: Callback<{ key: string; args: any }>) {
-    if (!this.channel) {
-      await this.connect()
-    }
-    this.channel.consume(this.exhange, (msg) => {
-      if (!msg) {
-        return
-      }
-      this.channel.ack(msg)
-      const args: T = JSON.parse(msg.content.toString()).data
-      cb(null, {
-        key: msg.fields.routingKey.replace(`${this.exhange}.`, ''),
-        args,
-      })
-    })
-  }
-
   async publish(key: string, data: unknown) {
+    if (this.closing) {
+      return
+    }
     if (!this.channel) {
       await this.connect()
     }
     const exchange = key.split('.')[0]
-    this.channel.publish(exchange, key, Buffer.from(JSON.stringify({ data })))
+    await this.assertExchange(exchange)
+    const buffer = Buffer.from(JSON.stringify({ data }))
+    this.channel.publish(exchange, key, buffer)
   }
 
-  async handle<T>(cb: Callback<{ key: string; args: any }>) {
+  async listen<T>(cb: Callback<{ key: string; args: any }>) {
+    if (this.closing) {
+      return
+    }
     if (!this.channel) {
       await this.connect()
     }
-    this.channel.consume(this.syncExhange, async (msg) => {
+    this.channel.consume(this.exchange, async (msg) => {
       if (!msg) {
         return
       }
       this.channel.ack(msg)
       const args: T = JSON.parse(msg.content.toString()).data
-      const key = msg.fields.routingKey.replace(`sync.${this.exhange}.`, '')
-      try {
-        const data = await cb(null, { key, args })
-        console.log(data)
-        this.channel.sendToQueue(
-          msg.properties.replyTo,
-          Buffer.from(JSON.stringify({ data: { error: null, data } })),
-          {
-            correlationId: msg.properties.correlationId,
-          }
-        )
-      } catch (error) {
-        this.channel.sendToQueue(
-          msg.properties.replyTo,
-          Buffer.from(JSON.stringify({ data: { error } })),
-          {
-            correlationId: msg.properties.correlationId,
-          }
-        )
+      const key = msg.fields.routingKey.replace(`${this.exchange}.`, '')
+      if (!msg.properties.correlationId) {
+        try {
+          cb({ key, args })
+        } catch (error) {
+          console.error(error)
+        }
+      }
+      else {
+        try {
+          const data = await cb({ key, args })
+          this.channel.sendToQueue(
+            msg.properties.replyTo,
+            Buffer.from(JSON.stringify({ data: { error: null, data } })),
+            {
+              correlationId: msg.properties.correlationId,
+            }
+          )
+        } catch (error) {
+          this.channel.sendToQueue(
+            msg.properties.replyTo,
+            Buffer.from(JSON.stringify({ data: { error } })),
+            {
+              correlationId: msg.properties.correlationId,
+            }
+          )
+        }
       }
     })
   }
 
   async invoke<T>(key: string, data: unknown) {
+    if (this.closing) {
+      return
+    }
     if (!this.channel) {
-      console.log('Connecting')
       await this.connect()
     }
-    let replied = false
-    const correlationId = randomBytes(4).toString('hex')
+    const exchange = key.split('.')[0]
+    await this.assertExchange(exchange)
+    const correlationId = this.generateCorrelationId()
+    const buffer = Buffer.from(JSON.stringify({ data, response: true }))
     const tmpQueue = await this.channel.assertQueue('', {
       exclusive: true,
       autoDelete: true,
       durable: false,
     })
-    console.log(`Created tmp queue: ${tmpQueue.queue}`)
     return new Promise<T>((resolve, reject) => {
       this.channel.consume(tmpQueue.queue, (msg) => {
         if (!msg) {
           return
         }
         this.channel.ack(msg)
+        this.channel.deleteQueue(tmpQueue.queue)
         if (msg.properties.correlationId == correlationId) {
           const response = JSON.parse(msg.content.toString()).data as {
-            error: unknown | null
+            error: Error | null
             data: T
           }
           if (response.error) {
@@ -141,11 +110,10 @@ export class Broker {
           resolve(response.data)
         }
       })
-      console.log(`publishing to ${key.split('.')[0]} with key "sync.${key}"`)
       this.channel.publish(
-        key.split('.')[0],
-        `sync.${key}`,
-        Buffer.from(JSON.stringify({ data })),
+        exchange,
+        key,
+        buffer,
         {
           correlationId,
           replyTo: tmpQueue.queue,
@@ -155,6 +123,28 @@ export class Broker {
   }
 
   async close() {
-    this.channel?.close?.()
+    try {
+      this.closing = false
+      await this.channel.close()
+      return await this.rabbitMQ.close()
+    } catch (error) {
+      return
+    }
+  }
+
+  async assertExchange(exchange: string) {
+    await this.channel.assertExchange(exchange, this.opts.exhangeType || 'fanout', { durable: true })
+    await this.channel.assertQueue(exchange, {
+      durable: true,
+    })
+    await this.channel.bindQueue(
+      exchange,
+      exchange,
+      `${exchange}.*`
+    )
+    return
+  }
+  generateCorrelationId() {
+    return randomBytes(4).toString('hex')
   }
 }
