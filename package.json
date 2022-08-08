@@ -1,5 +1,5 @@
 {
-  "name": "amqp-messenger",
+  "name": "amqp.ts",
   "version": "1.0.0",
   "description": "Amqp lib to send and receive messages from different applications",
   "source": "./src/index.ts",

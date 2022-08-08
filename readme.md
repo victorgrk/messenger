@@ -1,4 +1,4 @@
-# AMQP messenger
+# AMQP.ts
 
 > Send message and response to event with ts decorators
 
