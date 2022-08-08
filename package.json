@@ -29,7 +29,7 @@
     "typedi"
   ],
   "author": "Victor Gorecki",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
