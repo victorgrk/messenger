@@ -1,4 +1,4 @@
-# AMQP.ts
+# RabbitMQ-ts
 
 > Send message and response to event with ts decorators
 
@@ -24,7 +24,7 @@ The author will try to add support for new depency injectors in the futures.
 You can install the package with just
 
 ```sh
-npm i --save amqp-messenger
+npm i --save rabbitmq-ts
 ```
 
 ## Documentation
@@ -37,7 +37,7 @@ I recommand using it as a service :
 
 ```typescript
 import { Service } from "typedi";
-import { Messenger } from "amqp-messenger";
+import { Messenger } from "rabbitmq-ts";
 
 @Service()
 export class Mesh {
@@ -64,7 +64,7 @@ For tsed, you can init your Messenger in your main configuration
 ```typescript
 import { AfterInit } from "@tsed/common";
 import { Configuration, Inject, InjectorService } from "@tsed/di";
-import { Messenger } from "amqp-messenger";
+import { Messenger } from "rabbitmq-ts";
 
 @Module()
 export class Server implements AfterInit {
@@ -112,7 +112,7 @@ export class Server implements AfterInit {
 > To emit to rabbitmq
 
 ```typescript
-import { Messenger } from "amqp-messenger";
+import { Messenger } from "rabbitmq-ts";
 
 @Service()
 export class MyService {
@@ -139,7 +139,7 @@ In your payment service, just use the @Amqp decorarator
 
 ```typescript
 // first, import your mesh service
-import { Amqp } from "amqp-messenger";
+import { Amqp } from "rabbitmq-ts";
 
 @Service()
 export class MyService {
