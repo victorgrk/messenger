@@ -4,3 +4,7 @@ node_modules
 build
 .npmrc
 examples
+src
+.vscode
+.gitignore
+.husky

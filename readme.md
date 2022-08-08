@@ -1,7 +1,5 @@
 # AMQP messenger
 
-# THIS PACKAGE IS CURRENTLY UNDER DEVELOPMENT, IT HAS NOT BEEN PUBLISHED TO NPM REGISTRY
-
 > Send message and response to event with ts decorators
 
 ## Before start
@@ -31,16 +29,7 @@ npm i --save amqp-messenger
 
 ## Documentation
 
-First of all, this librairy need to scan your project to register all decorators, it will only import the files to trigger the typescript
-decorator process
-To import files, use this method in a root file of your project (index.ts or other files that loads before your program start running)
-
-```typescript
-import { importer } from "amqp-messenger";
-importer(`${__dirname}/events/**.*.ts`); // the path must group all files where you have @Amqp decorator
-```
-
-Now, you can start the amqp lib by initializing the Messenger singleton
+You can start the amqp lib by initializing the Messenger singleton
 
 ### TypeDI
 
@@ -54,6 +43,7 @@ import { Messenger } from "amqp-messenger";
 export class Mesh {
   constructor() {
     Messenger.init({
+      rootDir: __dirname,
       name: "my-node-name",
       rabbit: {
         host: process.env.RABBITMQ_HOST,
@@ -83,6 +73,7 @@ export class Server implements AfterInit {
 
   $afterInit() {
     Messenger.init({
+      rootDir: __dirname,
       name: "my-node-name",
       rabbit: {
         host: process.env.RABBITMQ_HOST,
@@ -100,11 +91,12 @@ export class Server implements AfterInit {
 
 > Library configuration object
 
-| Name   | Default                | Description                                                                        |
-| ------ | ---------------------- | ---------------------------------------------------------------------------------- |
-| rabbit | see below the defaults | The rabbitmq credentials used to connect to the server                             |
-| di     | undefined              | The di service usued in this package.                                              |
-| name   | undefined              | The service name of your application, usued to receive message from other services |
+| Name    | Default                | Description                                                                              |
+| ------- | ---------------------- | ---------------------------------------------------------------------------------------- |
+| rabbit  | see below the defaults | The rabbitmq credentials used to connect to the server                                   |
+| di      | undefined              | The di service usued in this package.                                                    |
+| name    | undefined              | The service name of your application, usued to receive message from other services       |
+| rootDir | undefined              | The root directory where you implement your @Amqp decorators (get folder and subfolders) |
 
 > RabbitMQ configuration object
 
