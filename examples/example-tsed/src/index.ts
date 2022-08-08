@@ -1,9 +1,6 @@
 import { $log } from "@tsed/common"
 import { PlatformExpress } from "@tsed/platform-express"
-import { importer } from '../../..'
 import { Server } from "./Server"
-
-importer(`${__dirname}/services/**/*.ts`)
 
 async function bootstrap() {
   try {

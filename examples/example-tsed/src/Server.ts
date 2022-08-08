@@ -7,6 +7,7 @@ import compress from "compression"
 import cookieParser from "cookie-parser"
 import cors from "cors"
 import methodOverride from "method-override"
+import { join } from 'path'
 import { Messenger } from '../../..'
 import { config } from "./config/index"
 import * as rest from "./controllers/rest/index"
@@ -48,6 +49,7 @@ export class Server implements AfterInit {
 
   $afterInit() {
     Messenger.init({
+      rootDir: join(__dirname, 'services'),
       name: 'tsed-example',
       rabbit: {
         host: 'localhost',

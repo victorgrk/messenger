@@ -9,6 +9,7 @@
     "start:prod": "cross-env NODE_ENV=production node dist/index.js"
   },
   "dependencies": {
+    "@prisma/client": "^4.1.1",
     "@tsed/ajv": "^6.117.1",
     "@tsed/common": "^6.117.1",
     "@tsed/core": "^6.117.1",
@@ -26,6 +27,7 @@
     "@tsed/platform-params": "^6.117.1",
     "@tsed/platform-response-filter": "^6.117.1",
     "@tsed/platform-views": "^6.117.1",
+    "@tsed/prisma": "^6.125.2",
     "@tsed/schema": "^6.117.1",
     "ajv": "^8.11.0",
     "barrelsby": "^2.3.4",
@@ -38,7 +40,8 @@
     "dotenv-expand": "^8.0.3",
     "dotenv-flow": "^3.2.0",
     "express": "^4.18.1",
-    "method-override": "^3.0.0"
+    "method-override": "^3.0.0",
+    "prisma": "^4.1.1"
   },
   "tsed": {
     "packageManager": "npm",

@@ -1,15 +1,15 @@
+import { join } from 'path'
 import 'reflect-metadata'
 import Container from 'typedi'
-import { importer, Messenger } from '../../..'
+import { Messenger } from '../../..'
 import { DirectoryInformation } from './services/directory'
 
-importer(`${__dirname}/services/*.ts`).then(() => {
-  Messenger.init({
-    name: 'typedi-example',
-    rabbit: {
-      host: 'localhost',
-    },
-    di: Container
-  })
-  Container.get(DirectoryInformation).loadFile()
+Messenger.init({
+  rootDir: join(__dirname, 'services'),
+  name: 'typedi-example',
+  rabbit: {
+    host: 'localhost',
+  },
+  di: Container
 })
+Container.get(DirectoryInformation).publishHelp()

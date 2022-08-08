@@ -16,5 +16,14 @@ export class DirectoryInformation {
       .catch(e => console.error(e))
   }
 
+  publishHelp() {
+    let i = 0
+    setInterval(() => {
+      console.log('Publishing to counter', i)
+      Messenger.publish('tsed-example.counter', { message: 'Hello World', i })
+      i++
+    }, 200)
+  }
+
 
 }
