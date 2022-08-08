@@ -1,10 +1,9 @@
 import { readdirSync, statSync } from 'fs'
-import globParent from 'glob-parent'
 import { resolve } from 'path'
 
 export class FileImporter {
   static async import(path: string) {
-    const current = resolve(globParent(path))
+    const current = resolve(path)
     const files = await FileImporter.treeResolver(current)
     if (!files) {
       throw 'No files found'
