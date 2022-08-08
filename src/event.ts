@@ -1,3 +1,4 @@
+import { FileImporter } from './core/file-importer'
 import { Broker } from './core/messenger'
 import { MetadataManager } from './core/metadata'
 import { Config } from './types'
@@ -13,20 +14,27 @@ export class Messenger {
     return Messenger.instance
   }
 
-  private constructor() { }
+  private constructor() {
+    if (Messenger.instance) {
+      throw new Error('Messenger is a singleton')
+    }
+    process.once('beforeExit', async () => {
+      try {
+        return await this.close()
+      } catch (e) { }
+    })
+  }
 
   static init(config: Config) {
     Messenger.getInstance().init(config)
   }
 
   init(config: Config) {
+    FileImporter.import(config.rootDir)
     this.config = config
     this.broker = new Broker(config.rabbit, config.name)
     this.broker.connect().then(() => {
-      this.broker.listen(({ key, args }) => {
-        MetadataManager.trigger(key, args?.data || args)
-      })
-      this.broker.handle((error: Error | null, { key, args }) =>
+      this.broker.listen(({ key, args }) =>
         MetadataManager.instance().trigger(key, args?.data || args))
     })
   }
@@ -48,10 +56,10 @@ export class Messenger {
   }
 
   static close() {
-    Messenger.getInstance().close()
+    return Messenger.getInstance().close()
   }
 
   close() {
-    this.broker.close()
+    return this.broker.close()
   }
 }

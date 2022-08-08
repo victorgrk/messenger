@@ -1,6 +1,5 @@
 export declare type Constructable<T> = new (...args: any[]) => T
 export type Callback<I = any, O = any> = (
-  error: unknown | null,
   result: I
 ) => O | Promise<O>
 
@@ -13,6 +12,7 @@ export interface BrokerConfig {
 }
 
 export interface Config {
+  rootDir: string
   name: string
   rabbit: BrokerConfig
   di: {
