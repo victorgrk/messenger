@@ -1,6 +1,9 @@
 {
-  "name": "rabbitmq-ts",
-  "version": "1.0.1",
+  "name": "@vicgrk/messenger",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
   "description": "Amqp lib to send and receive messages from different applications",
   "source": "./src/index.ts",
   "main": "./lib/cjs/index.js",

@@ -1,4 +1,4 @@
-# RabbitMQ-ts
+# @vicgrk/messenger
 
 > Send message and response to event with ts decorators
 
@@ -24,7 +24,7 @@ The author will try to add support for new depency injectors in the futures.
 You can install the package with just
 
 ```sh
-npm i --save rabbitmq-ts
+npm i --save @vicgrk/messenger
 ```
 
 ## Documentation
@@ -33,28 +33,23 @@ You can start the amqp lib by initializing the Messenger singleton
 
 ### TypeDI
 
-I recommand using it as a service :
+Init your Messenger in the entrypoint of your app (index.ts) :
 
 ```typescript
-import { Service } from "typedi";
-import { Messenger } from "rabbitmq-ts";
+import Container, { Service } from "typedi";
+import { Messenger } from "@vicgrk/messenger";
 
-@Service()
-export class Mesh {
-  constructor() {
-    Messenger.init({
-      rootDir: __dirname,
-      name: "my-node-name",
-      rabbit: {
-        host: process.env.RABBITMQ_HOST,
-        port: process.env.RABBITMQ_PORT,
-        user: process.env.RABBITMQ_USER,
-        password: process.env.RABBITMQ_PASSWORD,
-      },
-      di: "typedi",
-    });
-  }
-}
+Messenger.init({
+  rootDir: __dirname,
+  name: "my-node-name",
+  rabbit: {
+    host: process.env.RABBITMQ_HOST,
+    port: process.env.RABBITMQ_PORT,
+    user: process.env.RABBITMQ_USER,
+    password: process.env.RABBITMQ_PASSWORD,
+  },
+  di: Container,
+});
 ```
 
 ### TSED.io
@@ -64,7 +59,7 @@ For tsed, you can init your Messenger in your main configuration
 ```typescript
 import { AfterInit } from "@tsed/common";
 import { Configuration, Inject, InjectorService } from "@tsed/di";
-import { Messenger } from "rabbitmq-ts";
+import { Messenger } from "@vicgrk/messenger";
 
 @Module()
 export class Server implements AfterInit {
@@ -112,7 +107,7 @@ export class Server implements AfterInit {
 > To emit to rabbitmq
 
 ```typescript
-import { Messenger } from "rabbitmq-ts";
+import { Messenger } from "@vicgrk/messenger";
 
 @Service()
 export class MyService {
@@ -139,7 +134,7 @@ In your payment service, just use the @Amqp decorarator
 
 ```typescript
 // first, import your mesh service
-import { Amqp } from "rabbitmq-ts";
+import { Amqp } from "@vicgrk/messenger";
 
 @Service()
 export class MyService {
