@@ -15,6 +15,17 @@
     "require": "./lib/cjs/index.js",
     "default": "./lib/esm/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:victorgrk/messenger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/victorgrk/messenger/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "scripts": {
     "clean": "rimraf lib",
     "lint": "eslint \"src/**/*.ts\"",
