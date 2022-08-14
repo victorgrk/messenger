@@ -17,14 +17,13 @@ export class FileImporter {
     for (const file of files.filter(
       (e) =>
         !e.includes('node_modules')
-        && (e.endsWith('js') || e.endsWith('ts') || e.endsWith('cjs') || e.endsWith('mjs'))
     )) {
       const filePath = resolve(path, file)
       const isDirectory = statSync(filePath).isDirectory()
       if (isDirectory) {
         const child = await FileImporter.treeResolver(filePath)
         result.push(...(child || []))
-      } else {
+      } else if (file.endsWith('.js') || file.endsWith('.ts') || file.endsWith('.cjs') || file.endsWith('.mjs')) {
         result.push(filePath)
       }
     }
