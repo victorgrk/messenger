@@ -26,10 +26,12 @@ export class Broker {
     if (!this.channel) {
       await this.connect()
     }
-    const exchange = key.split('.')[0]
+    const [exchange] = key.split('.')
     await this.assertExchange(exchange)
     const buffer = Buffer.from(JSON.stringify({ data }))
-    this.channel.publish(exchange, key, buffer)
+    this.channel.publish(exchange, key, buffer, {
+      appId: '@vicgrk/messenger'
+    })
   }
 
   async listen<T>(cb: Callback<{ key: string; args: any }>) {
@@ -44,7 +46,11 @@ export class Broker {
         return
       }
       this.channel.ack(msg)
-      const args: T = JSON.parse(msg.content.toString()).data
+      let tmp: T | { data: T } = JSON.parse(msg.content.toString())
+      if (msg.properties.appId === '@vicgrk/messenger' && typeof (<{ data: T }>tmp).data !== 'undefined') {
+        tmp = (<{ data: T }>tmp).data
+      }
+      const args = <T>tmp
       const key = msg.fields.routingKey.replace(`${this.exchange}.`, '')
       if (!msg.properties.correlationId) {
         try {
@@ -83,22 +89,22 @@ export class Broker {
     if (!this.channel) {
       await this.connect()
     }
-    const exchange = key.split('.')[0]
+    const [exchange] = key.split('.')
     await this.assertExchange(exchange)
     const correlationId = this.generateCorrelationId()
     const buffer = Buffer.from(JSON.stringify({ data, response: true }))
-    const tmpQueue = await this.channel.assertQueue('', {
+    const { queue } = await this.channel.assertQueue('', {
       exclusive: true,
       autoDelete: true,
       durable: false,
     })
     return new Promise<T>((resolve, reject) => {
-      this.channel.consume(tmpQueue.queue, (msg) => {
+      this.channel.consume(queue, (msg) => {
         if (!msg) {
           return
         }
         this.channel.ack(msg)
-        this.channel.deleteQueue(tmpQueue.queue)
+        this.channel.deleteQueue(queue)
         if (msg.properties.correlationId == correlationId) {
           const response = JSON.parse(msg.content.toString()).data as {
             error: Error | null
@@ -116,7 +122,9 @@ export class Broker {
         buffer,
         {
           correlationId,
-          replyTo: tmpQueue.queue,
+          replyTo: queue,
+          appId: '@vicgrk/messenger',
+
         }
       )
     })
@@ -135,7 +143,7 @@ export class Broker {
   async assertExchange(exchange: string) {
     await this.channel.assertExchange(exchange, this.opts.exhangeType || 'fanout', { durable: true })
     await this.channel.assertQueue(exchange, {
-      durable: true,
+      durable: true
     })
     await this.channel.bindQueue(
       exchange,
