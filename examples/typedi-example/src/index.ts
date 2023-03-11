@@ -10,6 +10,7 @@ Messenger.init({
   rabbit: {
     host: 'localhost',
   },
+  verbose: true,
   di: Container
 })
 Container.get(DirectoryInformation).publishHelp()

@@ -1,7 +1,7 @@
 import { FileImporter } from './core/file-importer'
 import { Broker } from './core/messenger'
 import { MetadataManager } from './core/metadata'
-import { Config } from './types'
+import { Config, MessageOptions } from './types'
 
 export class Messenger {
   private broker!: Broker
@@ -39,20 +39,37 @@ export class Messenger {
     })
   }
 
-  static publish(type: string, data: any) {
-    Messenger.getInstance().publish(type, data)
+  static publish(type: string, data: any, options?: MessageOptions) {
+    Messenger.getInstance().publish(type, data, options)
   }
 
-  publish(type: string, data: any) {
-    this.broker.publish(type, { data, type })
+  publish(type: string, data: any, options?: MessageOptions) {
+    if (this.config.verbose) {
+      console.log(`Publishing message to ${type} with payload : \n${JSON.stringify({ data }, null, 2)}`)
+    }
+    this.broker.publish(type, { data, type }, options)
   }
 
-  static invoke<T>(type: string, data: any) {
-    return Messenger.getInstance().invoke<T>(type, data)
+  static broadcast(type: string, data: any) {
+    Messenger.getInstance().broadcast(type, data)
   }
 
-  invoke<T>(type: string, data: any) {
-    return this.broker.invoke<T>(type, { data, type })
+  broadcast(type: string, data: any) {
+    if (this.config.verbose) {
+      console.log(`Broadcasting message to ${type} with payload : \n${JSON.stringify({ data }, null, 2)}`)
+    }
+    this.broker.broadcast(type, { data, type })
+  }
+
+  static invoke<T>(type: string, data: any, options?: MessageOptions) {
+    return Messenger.getInstance().invoke<T>(type, data, options)
+  }
+
+  invoke<T>(type: string, data: any, options?: MessageOptions) {
+    if (this.config.verbose) {
+      console.log(`Invoking message to ${type} with payload : \n${JSON.stringify({ data }, null, 2)}`)
+    }
+    return this.broker.invoke<T>(type, { data, type }, options)
   }
 
   static close() {

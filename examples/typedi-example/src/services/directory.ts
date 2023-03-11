@@ -6,7 +6,6 @@ export class DirectoryInformation {
 
   @Amqp('informations')
   async getDirectoryInformation(information: any) {
-    console.log('Got message from queue', information)
     return information.test
   }
 
@@ -19,11 +18,8 @@ export class DirectoryInformation {
   publishHelp() {
     let i = 0
     setInterval(() => {
-      console.log('Publishing to counter', i)
-      Messenger.publish('tsed-example.counter', { message: 'Hello World', i })
+      Messenger.publish('tsed-example.counter', { message: 'Hello World', i }, { deduplicationFieldPath: 'i' })
       i++
     }, 200)
   }
-
-
 }

@@ -21,12 +21,12 @@ export class FileInformationService {
 
   @Amqp('counter')
   async getCounter(counter: { message: string, i: number }) {
+    console.log(counter)
     await this.prisma.post.create({
       data: {
         title: counter.message,
         index: counter.i
       }
     })
-    console.log(counter)
   }
 }

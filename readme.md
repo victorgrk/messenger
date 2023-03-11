@@ -4,13 +4,7 @@
 
 ## Before start
 
-This library use a rabbitmq instance to communicate. You can spin up a **developpment message broker** with docker using:
-
-```sh
-docker run -d --rm --name my-rabbit -p 15672:15672 -p 5672:5672 rabbitmq:3-management
-```
-
-In a production environment, we recommand using a replicated RabbitMQ cluster.
+This library use a rabbitmq instance to communicate with the [deduplication plugin enable](https://github.com/noxdafox/rabbitmq-message-deduplication).
 
 ## Installation
 
@@ -42,6 +36,7 @@ import { Messenger } from "@vicgrk/messenger";
 Messenger.init({
   rootDir: __dirname,
   name: "my-node-name",
+  verbose: process.env.NODE_ENV !== "production",
   rabbit: {
     host: process.env.RABBITMQ_HOST,
     port: process.env.RABBITMQ_PORT,
@@ -70,6 +65,7 @@ export class Server implements AfterInit {
     Messenger.init({
       rootDir: __dirname,
       name: "my-node-name",
+      verbose: process.env.NODE_ENV !== "production",
       rabbit: {
         host: process.env.RABBITMQ_HOST,
         port: process.env.RABBITMQ_PORT,
@@ -91,6 +87,7 @@ export class Server implements AfterInit {
 | rabbit  | see below the defaults | The rabbitmq credentials used to connect to the server                                   |
 | di      | undefined              | The di service usued in this package.                                                    |
 | name    | undefined              | The service name of your application, usued to receive message from other services       |
+| verbose | false                  | Logs every transactions and payloads                                                     |
 | rootDir | undefined              | The root directory where you implement your @Amqp decorators (get folder and subfolders) |
 
 > RabbitMQ configuration object
@@ -121,9 +118,14 @@ export class MyService {
     // you should receive an object from the payment service running in a different application.
   }
 
-  // If you just send data, without receiving anything, you can call the publish method. It's much smaller in compute requirements
+  // If you just send data, without receiving anything, you can call the publish method. It's much smaller in compute requirements (avoid the round trip)
   sendUserUpdate(user: unknown) {
     Messenger.publish("users.update-user", user);
+  }
+
+  // If you want to, for example, refresh a list on all available consumers, you can you the broadcast method
+  broadcastListenerService(user: unknown) {
+    Messenger.broadcast("users.add-user-listener", user);
   }
 }
 ```

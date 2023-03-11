@@ -43,7 +43,15 @@ export class MetadataManager {
     const events = instances
       .filter((meta) => !!meta.instance)
       .map(async ({ instance, listener }) => await listener.bind(instance, ...args).call())
-    return Promise.any(events)
+    try {
+      return await Promise.any(events)
+    } catch (error: unknown) {
+      if (error instanceof AggregateError) {
+        throw error.errors.length === 1 ? error.errors[0] : error.errors
+      } else {
+        throw error
+      }
+    }
   }
 }
 
