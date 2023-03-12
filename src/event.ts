@@ -34,8 +34,8 @@ export class Messenger {
     this.config = config
     this.broker = new Broker(config.rabbit, config.name)
     this.broker.connect().then(() => {
-      this.broker.listen(({ key, args }) =>
-        MetadataManager.instance().trigger(key, args?.data || args))
+      this.broker.listen(({ key, args, opts }) =>
+        MetadataManager.instance().trigger(key, args?.data || args, opts))
     })
   }
 
@@ -65,11 +65,20 @@ export class Messenger {
     return Messenger.getInstance().invoke<T>(type, data, options)
   }
 
-  invoke<T>(type: string, data: any, options?: MessageOptions) {
+  async invoke<T>(type: string, data: any, options?: MessageOptions) {
     if (this.config.verbose) {
       console.log(`Invoking message to ${type} with payload : \n${JSON.stringify({ data }, null, 2)}`)
     }
-    return this.broker.invoke<T>(type, { data, type }, options)
+    const result = await this.broker.invoke<T>(type, { data, type }, options)
+    if (result === undefined) {
+      return null
+    }
+    try {
+      const json = JSON.parse(<any>result)
+      return json
+    } catch (e) {
+      return result
+    }
   }
 
   static close() {

@@ -1,7 +1,6 @@
 import { Channel, connect, Connection, Replies } from 'amqplib'
 import { randomBytes } from 'crypto'
 import { BrokerConfig, Callback, MessageOptions } from '../types'
-import { valueFromPath } from './helpers'
 
 const appId = '@vicgrk/messenger'
 
@@ -35,7 +34,7 @@ export class Broker {
     await this.send(key, data, options)
   }
 
-  async listen<T>(cb: Callback<{ key: string; args: any }>) {
+  async listen<T>(cb: Callback<{ key: string; args: any, opts: { origin: string } }>) {
     if (this.closing) {
       return
     }
@@ -47,10 +46,12 @@ export class Broker {
         return
       }
       this.channel.ack(msg)
+      let opts = <{ origin: string }>msg.properties.headers
+      opts ||= { origin: 'UNKNOWN' }
       const args: { data: T } = JSON.parse(msg.content.toString())
       const key = msg.fields.routingKey.replace(`${this.exchange}.`, '')
       try {
-        cb({ key, args })
+        cb({ key, args, opts })
       } catch (error) {
         console.error(error)
       }
@@ -65,22 +66,27 @@ export class Broker {
         tmp = (<{ data: T }>tmp).data
       }
       const args = <T>tmp
+      let opts = <{ origin: string }>msg.properties.headers
+      opts ||= { origin: 'UNKNOWN' }
       const key = msg.fields.routingKey.replace(`${this.exchange}.`, '')
       if (!msg.properties.correlationId) {
         try {
-          cb({ key, args })
+          cb({ key, args, opts })
         } catch (error) {
           console.error(error)
         }
       }
       else {
         try {
-          const data = await cb({ key, args })
+          const data = await cb({ key, args, opts })
           this.channel.sendToQueue(
             msg.properties.replyTo,
             Buffer.from(JSON.stringify({ data: { error: null, data } })),
             {
               correlationId: msg.properties.correlationId,
+              headers: {
+                origin: this.exchange,
+              }
             }
           )
         } catch (error) {
@@ -89,6 +95,9 @@ export class Broker {
             Buffer.from(JSON.stringify({ data: { error } })),
             {
               correlationId: msg.properties.correlationId,
+              headers: {
+                origin: this.exchange,
+              }
             }
           )
         }
@@ -106,7 +115,7 @@ export class Broker {
     const [exchange] = key.split('.')
     await this.channel.assertExchange(`${exchange}-broadcast`, 'fanout', { durable: true })
     const buffer = Buffer.from(JSON.stringify({ data }))
-    this.channel.publish(`${exchange}-broadcast`, key, buffer, { appId })
+    this.channel.publish(`${exchange}-broadcast`, key, buffer, { appId, headers: { origin: this.exchange } })
   }
 
   async invoke<T>(key: string, data: unknown, options?: MessageOptions) {
@@ -127,6 +136,10 @@ export class Broker {
       appId,
       correlationId,
       replyTo: queue,
+      headers: {
+        ...options?.headers,
+        origin: this.exchange
+      }
     }
     return new Promise<T>((resolve, reject) => {
       this.channel.consume(queue, (msg) => {
@@ -155,11 +168,16 @@ export class Broker {
     await this.assertExchange(exchange)
     let opts: any = {
       ...options,
+      headers: {
+        ...options?.headers,
+        // 'x-deduplication-header': options?.deduplicationFieldPath,
+        origin: this.exchange
+      },
       appId,
     }
-    if (options?.deduplicationFieldPath) {
-      opts['x-deduplication-header'] = valueFromPath(data, options.deduplicationFieldPath)
-    }
+    // if (options?.deduplicationFieldPath) {
+    //   opts['x-deduplication-header'] = valueFromPath(data, options.deduplicationFieldPath)
+    // }
     const buffer = Buffer.from(JSON.stringify({ data }))
     this.channel.publish(
       exchange,
@@ -181,7 +199,7 @@ export class Broker {
 
   private async assertExchange(exchange: string) {
     await this.channel.assertExchange(exchange,
-      (<any>this.opts)?.exhangeType || 'x-message-deduplication',
+      (<any>this.opts)?.exhangeType || 'fanout',
       <any>{
         durable: true,
         arguments: {

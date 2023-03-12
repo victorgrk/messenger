@@ -25,9 +25,21 @@ export interface Config {
 
 export interface EventMetadata {
   target: Constructable<any>
-  listener: Function
+  listener: string
+}
+
+export type EventParamType = 'message' | 'origin'
+
+export interface EventParamMetadata {
+  index: number
+  param: EventParamType
+  options?: EventParamOptions
+}
+
+export interface EventParamOptions {
+  path?: string
 }
 
 export type MessageOptions = Options.Publish & {
-  deduplicationFieldPath: string
+  // deduplicationFieldPath?: string
 }

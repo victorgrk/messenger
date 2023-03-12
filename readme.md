@@ -4,7 +4,13 @@
 
 ## Before start
 
-This library use a rabbitmq instance to communicate with the [deduplication plugin enable](https://github.com/noxdafox/rabbitmq-message-deduplication).
+This library use a rabbitmq instance to communicate. You can spin up a **developpment message broker** with docker using:
+
+```sh
+docker run -d --rm --name my-rabbit -p 15672:15672 -p 5672:5672 rabbitmq:3-management
+```
+
+In a production environment, we recommand using a replicated RabbitMQ cluster.
 
 ## Installation
 
@@ -136,15 +142,33 @@ In your payment service, just use the @Amqp decorarator
 
 ```typescript
 // first, import your mesh service
-import { Amqp } from "@vicgrk/messenger";
+import { Amqp, Message, Origin } from "@vicgrk/messenger";
 
 @Service()
 export class MyService {
   constructor(private db: Database) {}
 
+  // Get the raw payload sent from `MyService`
   @Amqp("member-informations")
-  async getMemberInformation(memberId: string) {
-    const member = await this.db.getUserFromId(memberId);
+  async getMemberInformation(@Message() payload: { memberId: string }) {
+    const member = await this.db.getUserFromId(payload);
+    return member;
+  }
+
+  // Get a specific property from the sent message
+  @Amqp("member-informations")
+  async getMemberInformation(@Message("memberId") payload: string) {
+    const member = await this.db.getUserFromId(payload);
+    return member;
+  }
+
+  // You can also get the instance that send the request (this is the name parameter of the service that sent the request)
+  @Amqp("member-informations")
+  async getMemberInformation(
+    @Message("memberId") payload: string,
+    @Origin() origin: string
+  ) {
+    const member = await this.db.getUserFromId(payload);
     return member;
   }
 }
