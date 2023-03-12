@@ -14,9 +14,8 @@ export class FileInformationService {
   }
 
   async getDirectoryInformation() {
-    const result = await Messenger.invoke('typedi-example.informations', { test: '121' })
-    console.log(result)
-    return
+    const result = await Messenger.invoke<string>('typedi-example.informations', { test: '121' })
+    return { result }
   }
 
   @Amqp('counter')

@@ -1,12 +1,12 @@
 import { Service } from 'typedi'
-import { Amqp, Messenger } from '../../../..'
+import { Amqp, Message, Messenger, Origin } from '../../../..'
 
 @Service()
 export class DirectoryInformation {
 
   @Amqp('informations')
-  async getDirectoryInformation(information: any) {
-    return information.test
+  async getDirectoryInformation(@Message('test') information: string, @Origin() origin: string) {
+    return information + ' - ' + new Date().toISOString() + ' - ' + origin
   }
 
   loadFile() {
@@ -18,7 +18,7 @@ export class DirectoryInformation {
   publishHelp() {
     let i = 0
     setInterval(() => {
-      Messenger.publish('tsed-example.counter', { message: 'Hello World', i }, { deduplicationFieldPath: 'i' })
+      Messenger.publish('tsed-example.counter', { message: 'Hello World', i })
       i++
     }, 200)
   }

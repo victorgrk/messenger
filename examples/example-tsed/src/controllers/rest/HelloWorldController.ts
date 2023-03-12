@@ -9,7 +9,6 @@ export class HelloWorldController {
 
   @Get("/")
   async get() {
-    await this.file.getDirectoryInformation()
-    return "hello"
+    return await this.file.getDirectoryInformation()
   }
 }

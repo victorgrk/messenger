@@ -5,6 +5,8 @@ logs
 *.log
 npm-debug.log*
 
+prisma/dev.db
+
 # Runtime data
 pids
 *.pid
